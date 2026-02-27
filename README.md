@@ -29,16 +29,16 @@ I implemented **External Tables** to decouple data storage from the Hive metasto
 
 Using Python's Seaborn and Matplotlib libraries, I transformed processed Hive data into actionable charts.
 
-### Conversion Funnel Analysis
-This chart identifies the "drop-off" points in the customer journey. The analysis shows a significant bottleneck at the **Add-to-Cart** stage.
+### 1. Conversion Funnel Analysis
+![User Conversion Funnel](python_images/funnel_analysis.png)
 
-<img src="python_images/funnel_analysis.png" width="800" alt="User Conversion Funnel">
+### 2. Category Distribution
+![Product Category Distribution](python_images/category_bar.png)
 
-### Category Distribution
-Understanding which product segments drive the most engagement.
+### 3. Promotional Effect Heatmap
+![Promotion vs Non-Promotion](python_images/promo_heatmap.png)
 
-<img src="python_images/category_bar.png" width="800" alt="Product Category Distribution">
-
+---
 ### Analytical Logic (Python)
 The backend processing utilizes a dedicated virtual environment to manage dependencies and execute visualization scripts.
 

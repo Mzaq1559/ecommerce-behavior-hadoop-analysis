@@ -1,55 +1,68 @@
-数字技术综合应用2/3班期末综合项目报告
-项目题目：电商用户行为转化漏斗分析与促销效果优化
-姓名：（你的姓名）
-学号：（你的学号）
-班级：数字技术综合应用2/3班
-日期：2025年12月27日
-一、选题背景与数据集描述
-1.1 选题背景
-随着电子商务的快速发展，用户行为分析已成为平台提升转化率、优化运营策略的核心手段。本项目聚焦典型的电商业务场景——用户购买转化漏斗分析与促销效果优化。通过对用户从曝光、点击、加购、下单到支付的全链路行为进行分析，识别转化过程中的主要流失环节，并评估促销活动对用户行为的影响，最终提出可落地的运营优化建议。
-1.2 数据集描述
+Final Comprehensive Project Report for Digital Technology Application Class 2/3
 
-数据集来源：真实开源电商用户行为数据集（典型淘宝/天猫用户行为日志结构），包含用户行为日志及商品信息。
-数据规模：
-用户行为表（d5.csv）：约10万条记录
-商品信息表（d3.csv）：1000条商品记录
+Project Title: E-Commerce User Behavior Conversion Funnel Analysis and Promotional Effect Optimization
 
-主要字段：
-行为表：user_id, item_id, behavior_type (expose/click/cart/order/pay), create_time, user_region, channel, dt
-商品表：item_id, item_category, item_price, is_promotion (yes/no)
+Name: (Your Name)
+Student ID: (Your Student ID)
+Class: Digital Technology Application Class 2/3
+Date: December 27, 2025
 
+I. Project Background and Dataset Description
 
-数据集满足考核要求：真实开源、规模约10万条、禁止虚构数据。
-二、技术架构与环境配置
-2.1 技术架构
-采用Hadoop生态经典大数据处理流程：
-text原始CSV文件 → Hadoop HDFS存储 → Hive建库建表 → 数据清洗与关联 → MapReduce分析 → Python (Matplotlib/Seaborn) 可视化
-2.2 运行环境
+1.1 Project Background
 
-操作系统：Windows 11 + WSL2 (Ubuntu)
-Hadoop版本：3.3.2（伪分布式模式）
-Hive版本：3.1.3（Derby元数据存储）
-Python：3.12 + matplotlib, seaborn, pandas
-硬件：本地PC（单节点）
+With the rapid development of e-commerce, user behavior analysis has become a core means for platforms to improve conversion rates and optimize operational strategies. This project focuses on a typical e-commerce business scenario—analyzing the complete user purchase conversion funnel from exposure, click, add-to-cart, order, to payment. By analyzing user behavior across the entire journey, we identify the main loss points in the conversion process and evaluate the impact of promotional activities on user behavior, ultimately providing actionable operational optimization recommendations.
 
-三、数据存储与Hive建表
-3.1 HDFS存储路径
-数据分别存储在独立目录，避免多表冲突：
+1.2 Dataset Description
 
-/project/items/d3.csv（商品信息）
-/project/behaviors/d5.csv（用户行为日志）
+Data Source: Real, open-source e-commerce user behavior dataset (typical Taobao/Tmall user behavior log structure), containing user behavior logs and product information.
 
-HDFS路径截图（报告中插入）：
+Data Scale:
+- User behavior table (d5.csv): ~100,000 records
+- Product information table (d3.csv): 1,000 product records
+
+Key Fields:
+- Behavior table: user_id, item_id, behavior_type (expose/click/cart/order/pay), create_time, user_region, channel, dt
+- Product table: item_id, item_category, item_price, is_promotion (yes/no)
+
+Dataset Compliance: Real, open-source data with ~100,000 records; no fabricated data.
+
+II. Technical Architecture and Environment Configuration
+
+2.1 Technical Architecture
+
+Classic Hadoop ecosystem big data processing pipeline:
+Raw CSV Files → Hadoop HDFS Storage → Hive Database & Tables → Data Cleaning & Join → MapReduce Analysis → Python (Matplotlib/Seaborn) Visualization
+
+2.2 Runtime Environment
+
+- Operating System: Windows 11 + WSL2 (Ubuntu)
+- Hadoop Version: 3.3.2 (pseudo-distributed mode)
+- Hive Version: 3.1.3 (Derby metadata storage)
+- Python: 3.12 + matplotlib, seaborn, pandas
+- Hardware: Local PC (single node)
+
+III. Data Storage and Hive Table Creation
+
+3.1 HDFS Storage Paths
+
+Data stored in separate directories to avoid table conflicts:
+
+/project/items/d3.csv (product information)
+/project/behaviors/d5.csv (user behavior logs)
+
+HDFS verification commands:
 
 hdfs dfs -ls /project/items/
 hdfs dfs -ls /project/behaviors/
 HDFS Web UI
 
-3.2 Hive建表SQL
-SQLCREATE DATABASE ecommerce;
+3.2 Hive Table Creation SQL
+
+CREATE DATABASE ecommerce;
 USE ecommerce;
 
--- 商品表
+-- Product table
 CREATE EXTERNAL TABLE items (
   item_id STRING,
   item_category STRING,
@@ -61,7 +74,7 @@ STORED AS TEXTFILE
 LOCATION '/project/items'
 TBLPROPERTIES ("skip.header.line.count"="1");
 
--- 用户行为表
+-- User behavior table
 CREATE EXTERNAL TABLE behaviors (
   user_id STRING,
   item_id STRING,
@@ -75,218 +88,123 @@ ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE
 LOCATION '/project/behaviors'
 TBLPROPERTIES ("skip.header.line.count"="1");
-数据入库验证（报告插入截图）：
+
+Data validation:
 
 SELECT * FROM items LIMIT 5;
 SELECT * FROM behaviors LIMIT 5;
 
-四、数据预处理与多表关联
-4.1 时间字段标准化
-提取小时、日期维度：
-SQLCREATE TABLE behavior_clean AS
+IV. Data Preprocessing and Multi-Table Joins
+
+4.1 Time Field Standardization
+
+Extract hour and date dimensions:
+
+CREATE TABLE behavior_clean AS
 SELECT 
   *,
   DATE(create_time) AS behavior_date,
   HOUR(create_time) AS behavior_hour
 FROM behaviors;
-4.2 促销字段标准化
-统一为0/1编码：
-SQLCREATE TABLE items_clean AS
+
+4.2 Promotional Field Standardization
+
+Unified to 0/1 encoding:
+
+CREATE TABLE items_clean AS
 SELECT 
   *,
   CASE WHEN is_promotion = 'yes' THEN 1 ELSE 0 END AS is_promotion_int
 FROM items;
-4.3 多表关联
-基于item_id关联，处理商品信息缺失情况（左连接）：
-SQLCREATE TABLE analysis AS
+
+4.3 Multi-Table Join
+
+Join based on item_id, handling missing product information with left join:
+
+CREATE TABLE analysis AS
 SELECT 
-  b.*,
+  b.*, 
   i.item_category,
   i.item_price,
   i.is_promotion_int AS is_promotion
 FROM behavior_clean b
 LEFT JOIN items_clean i ON b.item_id = i.item_id;
-关联后数据量仍保持约10万条，缺失商品信息记录保留为NULL，便于后续分析。
-五、数据分析结论
-5.1 用户行为类型分布
-曝光（expose）和点击（click）占比最高，加购（cart）和下单（order）逐步减少，支付（pay）占比最低，符合典型电商漏斗特征。
-5.2 用户行为转化漏斗
-整体漏斗呈明显递减趋势，点击→加购环节流失最严重，是转化优化的核心瓶颈。
-5.3 区域与渠道行为差异
-江苏、上海、北京等一线地区用户活跃度最高；搜索（search）渠道带来的加购和下单行为显著高于推荐（recommend）渠道。
-5.4 商品特征分析
 
-家电、数码类商品价格较高但互动频繁
-促销商品在加购、下单环节转化率高于非促销商品，但在最终支付环节差异不明显
+Post-join data maintains ~100,000 records; missing product info remains as NULL for subsequent analysis.
 
-5.5 商品核心指标
-部分商品支付转化率接近90%，部分不足10%，存在明显优劣差异。
-六、数据可视化
-使用Python Matplotlib/Seaborn生成以下三类图表（报告插入图片）：
+V. Data Analysis Conclusions
 
-转化漏斗柱状图（bar chart）
-商品类别分布柱状图（bar chart）
-促销与非促销行为差异热力图（heatmap）
+5.1 User Behavior Type Distribution
 
-可运行代码：visualization.py（已附在代码包中）
-七、业务优化建议
-现状痛点
-用户行为漏斗显示，点击→加购环节转化率偏低（估计约25-30%），大量用户浏览商品后未触发加购，是漏斗核心流失点；促销活动能显著提升加购率，但最终支付转化提升有限。
-具体措施
+Exposures and clicks account for the highest proportion, with add-to-cart and orders progressively decreasing, and payments representing the lowest proportion—a typical e-commerce funnel characteristic.
 
-加购引导优化：在商品详情页增加悬浮加购按钮，文案差异化（如“加购锁价，30分钟内有效”），降低操作门槛。
-小额利益激励：推出“加购立减5元”或“加购送无门槛券”活动，券有效期控制在1小时内，促使用户快速决策。
-加购后触达：对加购未支付用户通过APP推送“您有商品待结算，库存紧张”或专属95折券，刺激支付转化。
+5.2 User Behavior Conversion Funnel
 
-预期效果
-点击→加购转化率提升10%-15%，加购→支付转化率提升8%-12%，整体漏斗最终支付用户数增长15%以上。
-八、问题解决与心得
-项目实施过程中在WSL环境下遇到多个技术难题：
+The overall funnel shows a clear declining trend, with the click→add-to-cart stage experiencing the most severe loss—the core optimization bottleneck for conversion.
 
-Hadoop启动时主机名含“-”导致sed解析失败 → 强制使用localhost
-Hive元数据初始化反复失败 → 删除metastore_db并注释冲突函数
-大文件COUNT(*)执行失败 → 使用LIMIT验证替代，符合单节点环境限制
+5.3 Regional and Channel Behavior Differences
 
-这些问题的排查与解决过程充分锻炼了大数据环境搭建与故障诊断能力。
-九、附件清单
+Tier-1 regions (Jiangsu, Shanghai, Beijing) show the highest user activity; the search channel drives significantly higher add-to-cart and order behaviors compared to the recommendation channel.
 
-项目报告（本文件）
-源代码包
-01_hive_tables.sql
-02_analysis.sql
-visualization.py
+5.4 Product Feature Analysis
 
-可视化成果（3张PNG图片）
-运行演示视频（3-5分钟）
+- Home appliances and digital products have higher prices but frequent interactions
+- Promotional products show higher conversion rates at add-to-cart and order stages vs. non-promotional products, but differences are minor at final payment
 
-声明：本项目全部代码与报告为本人独立完成，无抄袭行为。
-至此，项目全部完成。感谢老师指导！
-（报告完）
+5.5 Key Product Metrics
 
+Some products achieve ~90% payment conversion rates, while others fall below 10%—clear performance disparity exists.
 
+VI. Data Visualization
 
+Using Python Matplotlib/Seaborn to generate three chart types:
 
+- Conversion funnel bar chart
+- Product category distribution bar chart
+- Promotional vs. non-promotional behavior difference heatmap
 
--- 使用数据库
-USE ecommerce;
+Executable code: visualization.py (included in code package)
 
--- 1. 数据预处理：时间字段标准化 + 促销字段转为0/1
-CREATE TABLE analysis AS
-SELECT 
-  b.user_id,
-  b.item_id,
-  b.behavior_type,
-  b.create_time,
-  DATE(b.create_time) AS behavior_date,           -- 提取日期
-  HOUR(b.create_time) AS behavior_hour,           -- 提取小时
-  b.user_region,
-  b.channel,
-  b.dt,
-  i.item_category,
-  i.item_price,
-  CASE WHEN LOWER(i.is_promotion) = 'yes' THEN 1 ELSE 0 END AS is_promotion
-FROM behaviors b
-LEFT JOIN items i ON b.item_id = i.item_id;
+VII. Business Optimization Recommendations
 
--- 验证预处理结果
-SELECT * FROM analysis LIMIT 10;
+Current Pain Points
 
--- 2.1 用户行为类型分布及占比
-SELECT 
-  behavior_type,
-  COUNT(*) AS cnt,
-  ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER(), 2) AS percentage
-FROM analysis
-GROUP BY behavior_type
-ORDER BY cnt DESC;
+The funnel analysis reveals a low conversion rate (est. 25-30%) in the click→add-to-cart stage, with many users browsing products without triggering an add-to-cart action—this is the core loss point. While promotional activities significantly boost add-to-cart rates, their impact on final payment conversion is limited.
 
--- 2.2 用户行为转化漏斗（按行为阶段统计次数）
-SELECT 'expose' AS stage, COUNT(*) AS cnt FROM analysis WHERE behavior_type = 'expose'
-UNION ALL
-SELECT 'click'  AS stage, COUNT(*) AS cnt FROM analysis WHERE behavior_type = 'click'
-UNION ALL
-SELECT 'cart'   AS stage, COUNT(*) AS cnt FROM analysis WHERE behavior_type = 'cart'
-UNION ALL
-SELECT 'order'  AS stage, COUNT(*) AS cnt FROM analysis WHERE behavior_type = 'order'
-UNION ALL
-SELECT 'pay'    AS stage, COUNT(*) AS cnt FROM analysis WHERE behavior_type = 'pay'
-ORDER BY 
-  CASE stage 
-    WHEN 'expose' THEN 1 
-    WHEN 'click'  THEN 2 
-    WHEN 'cart'   THEN 3 
-    WHEN 'order'  THEN 4 
-    WHEN 'pay'    THEN 5 
-  END;
+Specific Measures
 
--- 2.3 不同区域的用户行为差异（前10个区域示例）
-SELECT 
-  user_region,
-  behavior_type,
-  COUNT(*) AS cnt
-FROM analysis
-GROUP BY user_region, behavior_type
-ORDER BY user_region, cnt DESC
-LIMIT 30;
+1. Optimize Add-to-Cart Guidance: Add a floating add-to-cart button on product detail pages with differentiated copy (e.g., "Lock price for 30 minutes"), lowering operational barriers.
 
--- 2.3 不同渠道的用户行为差异
-SELECT 
-  channel,
-  behavior_type,
-  COUNT(*) AS cnt
-FROM analysis
-GROUP BY channel, behavior_type
-ORDER BY channel, cnt DESC;
+2. Small-Value Incentives: Launch "Add-to-cart get 5¥ off" or "Add-to-cart get coupon" campaigns with 1-hour validity to encourage quick user decisions.
 
--- 3.1 商品类别分布
-SELECT 
-  item_category,
-  COUNT(*) AS interactions
-FROM analysis
-WHERE item_category IS NOT NULL
-GROUP BY item_category
-ORDER BY interactions DESC;
+3. Post-Add-to-Cart Engagement: For abandoned cart users, send app notifications like "Items awaiting checkout, limited stock" or exclusive 5% off coupons to stimulate payment conversion.
 
--- 3.1 商品价格区间分布
-SELECT 
-  CASE 
-    WHEN item_price < 100   THEN '<100'
-    WHEN item_price < 300   THEN '100-299'
-    WHEN item_price < 600   THEN '300-599'
-    WHEN item_price < 900   THEN '600-899'
-    WHEN item_price < 1300  THEN '900-1299'
-    ELSE '>=1300'
-  END AS price_range,
-  COUNT(*) AS cnt
-FROM analysis
-WHERE item_price IS NOT NULL
-GROUP BY price_range
-ORDER BY price_range;
+Expected Results
 
--- 3.2 促销与非促销商品的行为转化差异
-SELECT 
-  is_promotion,
-  behavior_type,
-  COUNT(*) AS cnt
-FROM analysis
-GROUP BY is_promotion, behavior_type
-ORDER BY is_promotion, behavior_type;
+- Click→add-to-cart conversion rate increase: 10%-15%
+- Add-to-cart→payment conversion rate increase: 8%-12%
+- Overall funnel final payment user growth: 15%+
 
--- 3.3 商品核心指标：加购率、下单率、支付率（筛选曝光≥10次的商品）
-SELECT 
-  item_id,
-  COUNT(CASE WHEN behavior_type = 'expose' THEN 1 END) AS exposes,
-  COUNT(CASE WHEN behavior_type = 'cart'   THEN 1 END) AS carts,
-  COUNT(CASE WHEN behavior_type = 'order'  THEN 1 END) AS orders,
-  COUNT(CASE WHEN behavior_type = 'pay'    THEN 1 END) AS pays,
-  ROUND(100.0 * COUNT(CASE WHEN behavior_type = 'cart'  THEN 1 END) / COUNT(CASE WHEN behavior_type = 'expose' THEN 1 END), 2) AS cart_rate,
-  ROUND(100.0 * COUNT(CASE WHEN behavior_type = 'order' THEN 1 END) / COUNT(CASE WHEN behavior_type = 'expose' THEN 1 END), 2) AS order_rate,
-  ROUND(100.0 * COUNT(CASE WHEN behavior_type = 'pay'   THEN 1 END) / COUNT(CASE WHEN behavior_type = 'expose' THEN 1 END), 2) AS pay_rate
-FROM analysis
-GROUP BY item_id
-HAVING exposes >= 10
-ORDER BY pay_rate DESC
-LIMIT 10;  -- 表现最优商品Top 10
+VIII. Problem Solving and Insights
 
--- 表现最差商品（支付率最低）
--- 将上面查询的 ORDER BY pay_rate ASC 即可
+Several technical challenges encountered in the WSL environment:
+
+1. Hadoop startup failure: Hostname containing "-" caused sed parsing failure → Forced use of localhost
+2. Hive metadata initialization failure: Repeated failures → Deleted metastore_db and commented conflicting functions
+3. Large file COUNT(*) execution failure: Query failed → Used LIMIT validation instead, appropriate for single-node environment
+
+The troubleshooting and resolution process significantly improved big data environment setup and fault diagnosis capabilities.
+
+IX. Attachments Checklist
+
+- Project report (this document)
+- Source code package:
+  - 01_hive_tables.sql
+  - 02_analysis.sql
+  - visualization.py
+- Visualization outputs (3 PNG images)
+- Demonstration video (3-5 minutes)
+
+Declaration: All code and reports in this project were independently completed by the author with no plagiarism.
+
+Project Complete. Thank you for your guidance!

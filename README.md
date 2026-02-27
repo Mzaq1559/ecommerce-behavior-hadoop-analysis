@@ -51,7 +51,7 @@ Comparing behavior patterns between promoted and non-promoted items to evaluate 
 ### Analytical Logic (Python)
 The backend processing utilizes a dedicated virtual environment to manage dependencies and execute visualization scripts.
 
-![Python Script Execution](images/12.png)
+![Python Script Execution](images/9.png)
 *Snippet of the visualization logic and environment setup*
 
 ---
